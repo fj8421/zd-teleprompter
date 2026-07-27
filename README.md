@@ -14,6 +14,21 @@
 - **视频录制**：支持在提词过程中同步录制摄像头画面，录制完成后可预览和下载，视频不上传云端。
 - **Apple 风格交互**：内置自定义确认/提示弹窗，避免浏览器原生 `alert` / `confirm` 破坏视觉一致性。
 
+## DEMO
+
+<table>
+  <tr>
+    <td><img src="assets/demo-01.png" width="30%"></td>
+    <td><img src="assets/demo-02.png" width="30%"></td>
+    <td><img src="assets/demo-03.png" width="30%"></td>
+  </tr>
+  <tr>
+    <td><img src="assets/demo-04.png" width="30%"></td>
+    <td><img src="assets/demo-05.png" width="30%"></td>
+    <td><img src="assets/demo-06.png" width="30%"></td>
+  </tr>
+</table>
+
 ## 技术栈
 
 - React 19
@@ -102,7 +117,7 @@ src/
 | `width` | `20`–`100`，步进 `5` | 文本显示宽度范围，可在播放页拖拽调整。 |
 | `indicatorPos` | `10`–`90`，步进 `1` | 指示线垂直位置范围。 |
 | `focusGuideHeight` | `6`–`50`，步进 `1` | 辅助阅读框高度范围。 |
-| `pipScale` | `0.5`–`2.5`，步进 `0.1` | 画中画浮窗缩放范围。 |
+| `pipScale` | `0.25`–`2.5`，步进 `0.05` | 画中画浮窗缩放范围。 |
 
 ### `APP_LIMITS`
 

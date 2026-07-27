@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
 export const useFullscreen = (elementRef) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -7,23 +10,31 @@ export const useFullscreen = (elementRef) => {
     if (!elementRef.current) return;
 
     const element = elementRef.current;
-    const request = element.requestFullscreen
-      || element.webkitRequestFullscreen
-      || element.mozRequestFullScreen
-      || element.msRequestFullscreen;
 
-    if (request) {
-      try {
-        await request.call(element);
-        return;
-      } catch (e) {
-        console.error('Fullscreen failed, fallback to CSS:', e);
+    if (!isIOS()) {
+      const request = element.requestFullscreen
+        || element.webkitRequestFullscreen
+        || element.mozRequestFullScreen
+        || element.msRequestFullscreen;
+
+      if (request) {
+        try {
+          await request.call(element);
+          return;
+        } catch (e) {
+          // fall through to CSS fullscreen
+        }
       }
     }
 
     element.classList.add('css-fullscreen');
+    document.documentElement.classList.add('css-fullscreen-active');
     document.body.style.overflow = 'hidden';
     setIsFullscreen(true);
+
+    if (isIOS()) {
+      window.scrollTo(0, 1);
+    }
   }, [elementRef]);
 
   const exit = useCallback(async () => {
@@ -42,11 +53,12 @@ export const useFullscreen = (elementRef) => {
         await exitFn.call(document);
         return;
       } catch (e) {
-        console.error('Exit fullscreen failed:', e);
+        // fall through to CSS cleanup
       }
     }
 
     elementRef.current?.classList.remove('css-fullscreen');
+    document.documentElement.classList.remove('css-fullscreen-active');
     document.body.style.overflow = '';
     setIsFullscreen(false);
   }, [elementRef]);

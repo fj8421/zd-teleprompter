@@ -2,10 +2,14 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   isMediaRecorderSupported,
   pickRecorderMimeType,
+  getRecorderExtension,
   getRecorderBitrate,
   buildRecordingFileName,
   downloadBlob
 } from '../utils/recorderSupport';
+
+const isMp4Type = (mimeType) => String(mimeType || '').toLowerCase().startsWith('video/mp4');
+const isMp4Recording = (mimeType, ext) => ext === 'mp4' || isMp4Type(mimeType);
 
 export const useMediaRecorder = (stream, { resolution } = {}) => {
   const [isRecording, setIsRecording] = useState(false);
@@ -18,6 +22,7 @@ export const useMediaRecorder = (stream, { resolution } = {}) => {
   const recorderRef = useRef(null);
   const chunksRef = useRef([]);
   const extRef = useRef('webm');
+  const mimeTypeRef = useRef('video/webm');
   const startTimeRef = useRef(0);
   const accumulatedRef = useRef(0);
   const tickRef = useRef(null);
@@ -43,6 +48,13 @@ export const useMediaRecorder = (stream, { resolution } = {}) => {
     const recorder = recorderRef.current;
     if (!recorder) return;
     if (recorder.state !== 'inactive') {
+      if (!isMp4Recording(mimeTypeRef.current, extRef.current)) {
+        try {
+          recorder.requestData?.();
+        } catch (e) {
+          console.warn('Recorder requestData failed:', e);
+        }
+      }
       try {
         recorder.stop();
       } catch (e) {
@@ -68,6 +80,7 @@ export const useMediaRecorder = (stream, { resolution } = {}) => {
 
     const picked = pickRecorderMimeType();
     extRef.current = picked?.ext || 'webm';
+    mimeTypeRef.current = picked?.mime || '';
 
     let recorder;
     try {
@@ -76,10 +89,27 @@ export const useMediaRecorder = (stream, { resolution } = {}) => {
       };
       if (picked?.mime) options.mimeType = picked.mime;
       recorder = new MediaRecorder(stream, options);
-    } catch (e) {
-      console.error('MediaRecorder init failed:', e);
-      setError('RECORDER_INIT_FAILED');
-      return false;
+    } catch (initError) {
+      if (!picked?.mime) {
+        console.error('MediaRecorder init failed:', initError);
+        setError('RECORDER_INIT_FAILED');
+        return false;
+      }
+      console.warn('MediaRecorder init failed with preferred mime, retrying without mime:', initError);
+      try {
+        recorder = new MediaRecorder(stream, {
+          videoBitsPerSecond: getRecorderBitrate(resolution)
+        });
+      } catch (fallbackError) {
+        console.error('MediaRecorder init failed:', fallbackError);
+        setError('RECORDER_INIT_FAILED');
+        return false;
+      }
+    }
+
+    if (recorder.mimeType) {
+      mimeTypeRef.current = recorder.mimeType;
+      extRef.current = getRecorderExtension(recorder.mimeType, extRef.current);
     }
 
     chunksRef.current = [];
@@ -88,13 +118,17 @@ export const useMediaRecorder = (stream, { resolution } = {}) => {
 
     recorder.ondataavailable = (event) => {
       if (event.data && event.data.size > 0) {
+        if (event.data.type) {
+          mimeTypeRef.current = event.data.type;
+          extRef.current = getRecorderExtension(event.data.type, extRef.current);
+        }
         chunksRef.current.push(event.data);
       }
     };
 
     recorder.onstop = () => {
       clearTick();
-      const blob = new Blob(chunksRef.current, { type: picked?.mime || 'video/webm' });
+      const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current || picked?.mime || 'video/webm' });
       chunksRef.current = [];
       setIsRecording(false);
       setIsPaused(false);
@@ -115,7 +149,12 @@ export const useMediaRecorder = (stream, { resolution } = {}) => {
     };
 
     try {
-      recorder.start(1000);
+      if (isMp4Recording(mimeTypeRef.current, extRef.current)) recorder.start();
+      else recorder.start(1000);
+      if (recorder.mimeType) {
+        mimeTypeRef.current = recorder.mimeType;
+        extRef.current = getRecorderExtension(recorder.mimeType, extRef.current);
+      }
     } catch (e) {
       console.error('Recorder start failed:', e);
       setError('RECORDER_START_FAILED');

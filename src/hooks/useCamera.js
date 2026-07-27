@@ -9,6 +9,52 @@ const buildVideoConstraints = ({ facingMode, deviceId, resolution }) => {
   return { ...base, facingMode: { ideal: facingMode || 'user' } };
 };
 
+const buildBasicVideoConstraints = ({ facingMode }) => ({
+  facingMode: { ideal: facingMode || 'user' }
+});
+
+const uniqueConstraints = (constraints) => {
+  const seen = new Set();
+  return constraints.filter((constraint) => {
+    const key = JSON.stringify(constraint);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
+const getUserMediaWithFallback = async (mediaDevices, { facingMode, deviceId, resolution }) => {
+  const videoAttempts = uniqueConstraints([
+    buildVideoConstraints({ facingMode, deviceId, resolution }),
+    buildVideoConstraints({ facingMode, deviceId: null, resolution }),
+    buildBasicVideoConstraints({ facingMode })
+  ]);
+  const attempts = videoAttempts.flatMap((video) => [
+    { video, audio: true },
+    { video, audio: false }
+  ]);
+
+  let lastError = null;
+  for (const constraints of attempts) {
+    try {
+      const next = await mediaDevices.getUserMedia(constraints);
+      if (!constraints.audio && next.getAudioTracks().length === 0) {
+        try {
+          const audio = await mediaDevices.getUserMedia({ audio: true, video: false });
+          audio.getAudioTracks().forEach((track) => next.addTrack(track));
+        } catch (audioError) {
+          console.warn('getUserMedia audio fallback failed:', audioError);
+        }
+      }
+      return next;
+    } catch (e) {
+      lastError = e;
+      console.warn('getUserMedia attempt failed:', e);
+    }
+  }
+  throw lastError;
+};
+
 export const useCamera = ({ enabled, facingMode, deviceId, resolution }) => {
   const [stream, setStream] = useState(null);
   const [devices, setDevices] = useState([]);
@@ -56,10 +102,7 @@ export const useCamera = ({ enabled, facingMode, deviceId, resolution }) => {
           streamRef.current.getTracks().forEach((track) => track.stop());
           streamRef.current = null;
         }
-        const next = await mediaDevices.getUserMedia({
-          video: buildVideoConstraints({ facingMode, deviceId, resolution }),
-          audio: true
-        });
+        const next = await getUserMediaWithFallback(mediaDevices, { facingMode, deviceId, resolution });
         if (cancelled || requestId !== requestIdRef.current) {
           next.getTracks().forEach((track) => track.stop());
           return;

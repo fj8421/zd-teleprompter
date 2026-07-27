@@ -4,8 +4,9 @@ import { SETTINGS_LIMITS } from '../config/settingsDefaults';
 
 const BASE_WIDTH = 240;
 const DEFAULT_ASPECT = 16 / 9;
-const EDGE_MARGIN = 24;
-const BOTTOM_RESERVED = 80;
+const EDGE_MARGIN = 4;
+const BOTTOM_RESERVED = 8;
+const CONTROLS_MIN_WIDTH = 150;
 
 const formatDuration = (ms) => {
   const total = Math.floor(ms / 1000);
@@ -170,6 +171,7 @@ export const CameraPreview = ({
   const width = BASE_WIDTH * scale;
   const height = width / aspect;
   const inPreview = hasPreview && !isRecording;
+  const tooSmallForControls = width < CONTROLS_MIN_WIDTH;
 
   useEffect(() => {
     const handleResize = () => setViewport({ w: window.innerWidth, h: window.innerHeight });
@@ -195,20 +197,44 @@ export const CameraPreview = ({
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+    const playVideo = ({ retryMuted = false } = {}) => {
+      const promise = video.play?.();
+      if (promise?.then) {
+        promise.then(() => setPlaybackPlaying(true)).catch(() => {
+          if (retryMuted && !video.muted) {
+            video.muted = true;
+            const mutedPromise = video.play?.();
+            if (mutedPromise?.then) {
+              mutedPromise.then(() => setPlaybackPlaying(true)).catch(() => setPlaybackPlaying(false));
+            }
+            return;
+          }
+          setPlaybackPlaying(false);
+        });
+      }
+    };
+
+    video.playsInline = true;
     if (inPreview) {
+      video.pause();
       video.srcObject = null;
       video.src = previewUrl || '';
       video.loop = true;
       video.muted = false;
-      video.play().then(() => setPlaybackPlaying(true)).catch(() => setPlaybackPlaying(false));
+      video.defaultMuted = false;
+      video.load();
+      playVideo({ retryMuted: true });
     } else if (stream) {
+      video.pause();
       video.src = '';
       video.removeAttribute('src');
       video.load();
       video.srcObject = stream;
       video.loop = false;
       video.muted = true;
+      video.defaultMuted = true;
       setPlaybackPlaying(false);
+      playVideo();
     }
   }, [inPreview, previewUrl, stream]);
 
@@ -260,6 +286,10 @@ export const CameraPreview = ({
     showControlsTemporarily();
     return () => { if (hideTimerRef.current) clearTimeout(hideTimerRef.current); };
   }, [showControlsTemporarily]);
+
+  useEffect(() => {
+    if (!tooSmallForControls) showControlsTemporarily();
+  }, [tooSmallForControls, showControlsTemporarily]);
 
   const persistPosition = useCallback((left, top) => {
     const ratio = toRatio(left, top, width, height, viewport.w, viewport.h);
@@ -374,12 +404,18 @@ export const CameraPreview = ({
   const handleTogglePlayback = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
+    if (inPreview && video.muted) {
+      video.muted = false;
+      if (video.paused) video.play().catch(() => {});
+      return;
+    }
     if (video.paused) {
+      if (inPreview) video.muted = false;
       video.play().catch(() => {});
     } else {
       video.pause();
     }
-  }, []);
+  }, [inPreview]);
 
   if (!position) return null;
 
@@ -459,7 +495,7 @@ export const CameraPreview = ({
         </div>
       )}
 
-      {isRecording && (
+      {isRecording && !tooSmallForControls && (
         <div
           style={{
             position: 'absolute',
@@ -482,7 +518,7 @@ export const CameraPreview = ({
         </div>
       )}
 
-      {inPreview && showControls && (
+      {inPreview && showControls && !tooSmallForControls && (
         <button
           data-pip-control="true"
           onClick={(e) => { e.stopPropagation(); onDownload?.(); showControlsTemporarily(); }}
@@ -502,7 +538,7 @@ export const CameraPreview = ({
         </button>
       )}
 
-      {inPreview && (
+      {inPreview && !tooSmallForControls && (
         <div
           style={{
             position: 'absolute',
@@ -521,7 +557,7 @@ export const CameraPreview = ({
         </div>
       )}
 
-      {showControls && (
+      {showControls && !tooSmallForControls && (
         <div
           style={{
             position: 'absolute',

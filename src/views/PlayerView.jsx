@@ -780,8 +780,24 @@ export const PlayerView = ({ textId, onBack }) => {
       <style>{`
         .css-fullscreen {
           position: fixed !important;
-          inset: 0 !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          height: 100dvh !important;
           z-index: 9999 !important;
+          padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left) !important;
+        }
+        .css-fullscreen-active {
+          overflow: hidden !important;
+        }
+        .css-fullscreen-active body {
+          overflow: hidden !important;
+          position: fixed !important;
+          width: 100% !important;
+          height: 100% !important;
         }
       `}</style>
     </div>

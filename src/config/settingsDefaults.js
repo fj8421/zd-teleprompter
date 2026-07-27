@@ -57,7 +57,7 @@ export const SETTINGS_LIMITS = {
   // 辅助阅读框高度百分比范围和步进。
   focusGuideHeight: { min: 6, max: 50, step: 1 },
   // PiP 浮窗缩放范围和步进。
-  pipScale: { min: 0.5, max: 2.5, step: 0.1 }
+  pipScale: { min: 0.25, max: 2.5, step: 0.05 }
 };
 
 export const APP_LIMITS = {
