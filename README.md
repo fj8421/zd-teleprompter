@@ -18,14 +18,14 @@
 
 <table>
   <tr>
-    <td><img src="assets/demo-01.png" width="30%"></td>
-    <td><img src="assets/demo-02.png" width="30%"></td>
-    <td><img src="assets/demo-03.png" width="30%"></td>
+    <td><img src="assets/demo-01.png" width="90%"></td>
+    <td><img src="assets/demo-02.png" width="90%"></td>
+    <td><img src="assets/demo-03.png" width="90%"></td>
   </tr>
   <tr>
-    <td><img src="assets/demo-04.png" width="30%"></td>
-    <td><img src="assets/demo-05.png" width="30%"></td>
-    <td><img src="assets/demo-06.png" width="30%"></td>
+    <td><img src="assets/demo-04.png" width="90%"></td>
+    <td><img src="assets/demo-05.png" width="90%"></td>
+    <td><img src="assets/demo-06.png" width="90%"></td>
   </tr>
 </table>
 
