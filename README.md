@@ -18,14 +18,32 @@
 
 <table>
   <tr>
-    <td align="center"><img src="assets/demo-01.png" width="90%"></td>
-    <td align="center"><img src="assets/demo-02.png" width="90%"></td>
-    <td align="center"><img src="assets/demo-03.png" width="90%"></td>
+    <td align="center">
+      <img src="assets/demo-01.png" width="90%"><br>
+      <b>列表</b>
+    </td>
+    <td align="center">
+      <img src="assets/demo-02.png" width="90%"><br>
+      <b>编辑</b>
+    </td>
+    <td align="center">
+      <img src="assets/demo-03.png" width="90%"><br>
+      <b>主页面</b>
+    </td>
   </tr>
   <tr>
-    <td align="center"><img src="assets/demo-04.png" width="90%"></td>
-    <td align="center"><img src="assets/demo-05.png" width="90%"></td>
-    <td align="center"><img src="assets/demo-06.png" width="90%"></td>
+    <td align="center">
+      <img src="assets/demo-04.png" width="90%"><br>
+      <b>设置</b>
+    </td>
+    <td align="center">
+      <img src="assets/demo-05.png" width="90%"><br>
+      <b>开启录像</b>
+    </td>
+    <td align="center">
+      <img src="assets/demo-06.png" width="90%"><br>
+      <b>移动端</b>
+    </td>
   </tr>
 </table>
 
