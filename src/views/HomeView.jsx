@@ -148,7 +148,7 @@ export const HomeView = ({ onNavigate }) => {
         }}>
           <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '32px', fontWeight: '700', marginBottom: 'var(--space-sm)' }}>
             <img src="/favicon.svg" alt="" style={{ width: '36px', height: '36px' }} />
-            <span>紫电提词器</span>
+            <span>刘二妮提词器</span>
           </h1>
           <div style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>
             {texts.length} / {APP_LIMITS.maxTexts}
